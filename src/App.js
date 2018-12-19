@@ -43,7 +43,6 @@ const getStore = () => {
 
 const setStore = storeUpdate => {
   const currentStore = getStoreData(getStore());
-  const mergeResult = merge(currentStore, storeUpdate);
   localStorage.setItem(
     STORE_KEY,
     JSON.stringify(merge(currentStore, storeUpdate))
