@@ -2,16 +2,29 @@ import React, { useState } from "react";
 import merge from "lodash.merge";
 import "./App.css";
 
+function makeUniqueIdGenerator(id = "") {
+  let i = 0;
+  return function() {
+    i += 1;
+    return `${id}_${i}`;
+  };
+}
+
+const createUniqueId = makeUniqueIdGenerator("todo");
+
 const DEFAULT_TODOS = [
   {
+    id: createUniqueId(),
     text: "doodle",
     isCompleted: false
   },
   {
+    id: createUniqueId(),
     text: "60 push ups",
     isCompleted: false
   },
   {
+    id: createUniqueId(),
     text: "100 Russian Twists",
     isCompleted: false
   }
@@ -49,29 +62,13 @@ const setStore = storeUpdate => {
   );
 };
 
-function Todo({ todo, index, toggleTodo, removeTodo }) {
-  return (
-    <div
-      className="todo"
-      style={{ textDecoration: todo.isCompleted ? "line-through" : "" }}
-    >
-      {todo.text}
-
-      <div>
-        <button onClick={() => toggleTodo(index)}>Complete</button>
-        <button onClick={() => removeTodo(index)}>x</button>
-      </div>
-    </div>
-  );
-}
-
-function TodoForm({ addTodo }) {
-  const [value, setValue] = useState("");
+function TodoForm({ save, defaultValue = "" }) {
+  const [value, setValue] = useState(defaultValue);
 
   const handleSubmit = e => {
     e.preventDefault();
     if (!value) return;
-    addTodo(value);
+    save(value);
     setValue("");
   };
 
@@ -84,6 +81,40 @@ function TodoForm({ addTodo }) {
         onChange={e => setValue(e.target.value)}
       />
     </form>
+  );
+}
+
+function Todo({ todo, index, toggleTodo, removeTodo, updateTodo }) {
+  const [isEditing, setIsEditing] = useState(false);
+  if (isEditing) {
+    console.log(todo);
+    return (
+      <TodoForm
+        save={text => {
+          updateTodo({
+            ...todo,
+            text
+          });
+          setIsEditing(false);
+        }}
+        defaultValue={todo.text}
+      />
+    );
+  }
+  return (
+    <div
+      className="todo"
+      onDoubleClick={() => setIsEditing(true)}
+      style={{ textDecoration: todo.isCompleted ? "line-through" : "" }}
+    >
+      <input type="checkbox" />
+      {todo.text}
+
+      <div>
+        <button onClick={() => toggleTodo(index)}>Complete</button>
+        <button onClick={() => removeTodo(index)}>x</button>
+      </div>
+    </div>
   );
 }
 
@@ -100,7 +131,7 @@ function App() {
   };
 
   const addTodo = text => {
-    const newTodos = [...todos, { text }];
+    const newTodos = [...todos, { id: createUniqueId(), text }];
     syncTodos(newTodos);
   };
 
@@ -116,6 +147,11 @@ function App() {
     syncTodos(newTodos);
   };
 
+  const updateTodo = todo => {
+    const newTodos = todos.map(t => (t.id === todo.id ? todo : t));
+    syncTodos(newTodos);
+  };
+
   return (
     <div className="app">
       <div className="todo-list">
@@ -127,9 +163,10 @@ function App() {
               todo={todo}
               toggleTodo={toggleTodo}
               removeTodo={removeTodo}
+              updateTodo={updateTodo}
             />
           ))}
-        <TodoForm addTodo={addTodo} />
+        <TodoForm save={addTodo} />
       </div>
     </div>
   );
