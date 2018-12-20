@@ -107,11 +107,14 @@ function Todo({ todo, index, toggleTodo, removeTodo, updateTodo }) {
       onDoubleClick={() => setIsEditing(true)}
       style={{ textDecoration: todo.isCompleted ? "line-through" : "" }}
     >
-      <input type="checkbox" />
+      <input
+        type="checkbox"
+        checked={todo.isCompleted}
+        onChange={() => toggleTodo(index)}
+      />
       {todo.text}
 
       <div>
-        <button onClick={() => toggleTodo(index)}>Complete</button>
         <button onClick={() => removeTodo(index)}>x</button>
       </div>
     </div>
