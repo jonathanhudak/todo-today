@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import merge from "lodash.merge";
 import "./App.css";
 
 function makeUniqueIdGenerator(id = "") {
@@ -10,21 +9,36 @@ function makeUniqueIdGenerator(id = "") {
   };
 }
 
+const everyDay = "everyDay";
+const days = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday"
+];
+const DEFAULT_SELECTED_DAYS = days.slice(0, 4);
+
 const createUniqueId = makeUniqueIdGenerator("todo");
 
 const DEFAULT_TODOS = [
   {
     id: createUniqueId(),
+    days: DEFAULT_SELECTED_DAYS,
     text: "doodle",
     isCompleted: false
   },
   {
     id: createUniqueId(),
+    days: DEFAULT_SELECTED_DAYS,
     text: "60 push ups",
     isCompleted: false
   },
   {
     id: createUniqueId(),
+    days: DEFAULT_SELECTED_DAYS,
     text: "100 Russian Twists",
     isCompleted: false
   }
@@ -58,54 +72,125 @@ const setStore = storeUpdate => {
   const currentStore = getStoreData(getStore());
   localStorage.setItem(
     STORE_KEY,
-    JSON.stringify(merge(currentStore, storeUpdate))
+    JSON.stringify({
+      ...currentStore,
+      ...storeUpdate
+    })
   );
 };
 
-function TodoForm({ save, defaultValue = "" }) {
+function DayPicker({ defaultSelectedDays, onSetSelectedDays }) {
+  const [selectedDays, setSelectedDays] = useState(defaultSelectedDays);
+  const isDaySelected = day => selectedDays.includes(day);
+  const allDaysChecked = selectedDays === days;
+  function toggleCheckDay({ target }) {
+    const day = target.value;
+    let nextDays;
+    if (!isDaySelected(day)) {
+      nextDays = [...selectedDays, day];
+    } else {
+      nextDays = selectedDays.filter(d => d !== day);
+    }
+    setSelectedDays(nextDays);
+    onSetSelectedDays(nextDays);
+  }
+  return (
+    <fieldset>
+      <legend>Day</legend>
+      <pre>{JSON.stringify(selectedDays, null, 2)}</pre>
+      <label>
+        <input
+          type="checkbox"
+          value={everyDay}
+          checked={allDaysChecked}
+          onChange={() => setSelectedDays(allDaysChecked ? [] : days)}
+        />
+        Pick all days
+      </label>
+      &nbsp;—&nbsp;
+      {days.map(day => (
+        <label key={day}>
+          <input
+            type="checkbox"
+            value={day}
+            checked={isDaySelected(day)}
+            onChange={toggleCheckDay}
+          />
+          {day}
+        </label>
+      ))}
+    </fieldset>
+  );
+}
+
+function TodoForm({ todo, save, defaultValue = "" }) {
   const [value, setValue] = useState(defaultValue);
+  const [selectedDays, setSelectedDays] = useState(
+    todo ? todo.days : DEFAULT_SELECTED_DAYS
+  );
 
   const handleSubmit = e => {
     e.preventDefault();
     if (!value) return;
-    save(value);
+    console.log(value);
+    save({
+      text: value,
+      days: selectedDays
+    });
     setValue("");
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input
-        type="text"
-        className="input"
-        value={value}
-        onChange={e => setValue(e.target.value)}
-      />
+    <form onSubmit={handleSubmit} style={{ padding: 20 }}>
+      <label>
+        New todo
+        <input
+          type="text"
+          className="input"
+          placeholder="Climb Mt Rainier"
+          value={value}
+          onChange={e => setValue(e.target.value)}
+        />
+      </label>
+      {!!value && (
+        <DayPicker
+          defaultSelectedDays={selectedDays}
+          onSetSelectedDays={setSelectedDays}
+        />
+      )}
+      <button type="submit">Save</button>
     </form>
   );
 }
 
 function Todo({ todo, index, toggleTodo, removeTodo, updateTodo }) {
   const [isEditing, setIsEditing] = useState(false);
+  const setEditing = () => setIsEditing(true);
+  const setNotEditing = () => setIsEditing(false);
   if (isEditing) {
-    console.log(todo);
     return (
-      <TodoForm
-        save={text => {
-          updateTodo({
-            ...todo,
-            text
-          });
-          setIsEditing(false);
-        }}
-        defaultValue={todo.text}
-      />
+      <div>
+        <TodoForm
+          todo={todo}
+          save={update => {
+            updateTodo({
+              ...todo,
+              ...update
+            });
+            setNotEditing();
+          }}
+          defaultValue={todo.text}
+        />
+        <button onClick={setNotEditing}>Cancel</button>
+      </div>
     );
   }
   return (
     <div
       className="todo"
-      onDoubleClick={() => setIsEditing(true)}
-      style={{ textDecoration: todo.isCompleted ? "line-through" : "" }}
+      style={{
+        textDecoration: todo.isCompleted ? "line-through" : ""
+      }}
     >
       <input
         type="checkbox"
@@ -115,6 +200,7 @@ function Todo({ todo, index, toggleTodo, removeTodo, updateTodo }) {
       {todo.text}
 
       <div>
+        <button onClick={setEditing}>Edit</button>
         <button onClick={() => removeTodo(index)}>x</button>
       </div>
     </div>
@@ -133,8 +219,8 @@ function App() {
     });
   };
 
-  const addTodo = text => {
-    const newTodos = [...todos, { id: createUniqueId(), text }];
+  const addTodo = todo => {
+    const newTodos = [...todos, { id: createUniqueId(), ...todo }];
     syncTodos(newTodos);
   };
 
@@ -151,7 +237,8 @@ function App() {
   };
 
   const updateTodo = todo => {
-    const newTodos = todos.map(t => (t.id === todo.id ? todo : t));
+    console.log("update", todo);
+    const newTodos = todos.map(t => (t.id === todo.id ? { ...t, ...todo } : t));
     syncTodos(newTodos);
   };
 
@@ -160,14 +247,15 @@ function App() {
       <div className="todo-list">
         {Array.isArray(todos) &&
           todos.map((todo, index) => (
-            <Todo
-              key={index}
-              index={index}
-              todo={todo}
-              toggleTodo={toggleTodo}
-              removeTodo={removeTodo}
-              updateTodo={updateTodo}
-            />
+            <div key={index} style={{ padding: 20 }}>
+              <Todo
+                index={index}
+                todo={todo}
+                toggleTodo={toggleTodo}
+                removeTodo={removeTodo}
+                updateTodo={updateTodo}
+              />
+            </div>
           ))}
         <TodoForm save={addTodo} />
       </div>
