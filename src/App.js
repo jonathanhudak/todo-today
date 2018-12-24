@@ -19,26 +19,30 @@ const days = [
   "Saturday",
   "Sunday"
 ];
-const DEFAULT_SELECTED_DAYS = days.slice(0, 4);
+const DAYS = Object.freeze(
+  days.reduce((acc, d, index) => ({ ...acc, [d]: index }), {})
+);
+const getDay = day => DAYS[day];
+const ALL_DAYS_SELECTED = days.map(getDay);
 
 const createUniqueId = makeUniqueIdGenerator("todo");
 
 const DEFAULT_TODOS = [
   {
     id: createUniqueId(),
-    days: DEFAULT_SELECTED_DAYS,
+    days: ALL_DAYS_SELECTED,
     text: "doodle",
     isCompleted: false
   },
   {
     id: createUniqueId(),
-    days: DEFAULT_SELECTED_DAYS,
+    days: ALL_DAYS_SELECTED,
     text: "60 push ups",
     isCompleted: false
   },
   {
     id: createUniqueId(),
-    days: DEFAULT_SELECTED_DAYS,
+    days: ALL_DAYS_SELECTED,
     text: "100 Russian Twists",
     isCompleted: false
   }
@@ -81,58 +85,63 @@ const setStore = storeUpdate => {
 
 function DayPicker({ defaultSelectedDays, onSetSelectedDays }) {
   const [selectedDays, setSelectedDays] = useState(defaultSelectedDays);
-  const isDaySelected = day => selectedDays.includes(day);
-  const allDaysChecked = selectedDays === days;
+  const isDaySelected = day => selectedDays.includes(getDay(day));
+  const allDaysChecked = selectedDays === ALL_DAYS_SELECTED;
+  function syncDays(nextDays) {
+    setSelectedDays(nextDays);
+    onSetSelectedDays(nextDays);
+  }
   function toggleCheckDay({ target }) {
-    const day = target.value;
+    const day = DAYS[target.value];
     let nextDays;
     if (!isDaySelected(day)) {
       nextDays = [...selectedDays, day];
     } else {
       nextDays = selectedDays.filter(d => d !== day);
     }
-    setSelectedDays(nextDays);
-    onSetSelectedDays(nextDays);
+    syncDays(nextDays);
   }
   return (
     <fieldset>
       <legend>Day</legend>
-      <pre>{JSON.stringify(selectedDays, null, 2)}</pre>
       <label>
         <input
           type="checkbox"
           value={everyDay}
           checked={allDaysChecked}
-          onChange={() => setSelectedDays(allDaysChecked ? [] : days)}
+          onChange={() => syncDays(allDaysChecked ? [] : ALL_DAYS_SELECTED)}
         />
-        Pick all days
+        All days of the week
       </label>
-      &nbsp;—&nbsp;
-      {days.map(day => (
-        <label key={day}>
-          <input
-            type="checkbox"
-            value={day}
-            checked={isDaySelected(day)}
-            onChange={toggleCheckDay}
-          />
-          {day}
-        </label>
-      ))}
+      {!allDaysChecked && (
+        <>
+          &nbsp;—&nbsp;
+          {days.map(day => (
+            <label key={day}>
+              <input
+                type="checkbox"
+                value={day}
+                checked={isDaySelected(day)}
+                onChange={toggleCheckDay}
+              />
+              {day}
+            </label>
+          ))}
+        </>
+      )}
     </fieldset>
   );
 }
 
-function TodoForm({ todo, save, defaultValue = "" }) {
+function TodoForm({ cancel, todo, save, defaultValue = "" }) {
   const [value, setValue] = useState(defaultValue);
   const [selectedDays, setSelectedDays] = useState(
-    todo ? todo.days : DEFAULT_SELECTED_DAYS
+    todo ? todo.days : ALL_DAYS_SELECTED
   );
 
   const handleSubmit = e => {
     e.preventDefault();
     if (!value) return;
-    console.log(value);
     save({
       text: value,
       days: selectedDays
@@ -141,9 +150,9 @@ function TodoForm({ todo, save, defaultValue = "" }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ padding: 20 }}>
+    <form onSubmit={handleSubmit}>
       <label>
-        New todo
+        Todo&nbsp;
         <input
           type="text"
           className="input"
@@ -159,6 +168,7 @@ function TodoForm({ todo, save, defaultValue = "" }) {
         />
       )}
       <button type="submit">Save</button>
+      <button onClick={cancel}>Cancel</button>
     </form>
   );
 }
@@ -180,8 +190,8 @@ function Todo({ todo, index, toggleTodo, removeTodo, updateTodo }) {
             setNotEditing();
           }}
           defaultValue={todo.text}
+          cancel={setNotEditing}
         />
-        <button onClick={setNotEditing}>Cancel</button>
       </div>
     );
   }
@@ -257,7 +267,9 @@ function App() {
               />
             </div>
           ))}
-        <TodoForm save={addTodo} />
+        <div style={{ padding: 20 }}>
+          <TodoForm save={addTodo} />
+        </div>
       </div>
     </div>
   );
