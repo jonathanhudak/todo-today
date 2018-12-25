@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { Suspense, useState } from "react";
+import localForage from "localforage";
 import "./App.css";
 
 function makeUniqueIdGenerator(id = "") {
@@ -63,18 +64,33 @@ const getStoreData = store => {
   } catch (e) {}
 };
 
-const getStore = () => {
-  const store = localStorage.getItem(STORE_KEY);
+const getStore = async () => {
+  const store = await localForage.getItem(STORE_KEY);
   if (!store) {
-    localStorage.setItem(STORE_KEY, JSON.stringify(DEFAULT_STATE));
+    await localForage
+      .setItem(STORE_KEY, JSON.stringify(DEFAULT_STATE))
+      .then(console.log);
     return DEFAULT_STATE;
   }
   return getStoreData(store);
 };
 
+function hydrateDatabase() {
+  return getStore().then(store => {
+    if (!store) {
+      return localForage
+        .setItem(STORE_KEY, JSON.stringify(DEFAULT_STATE))
+        .then(s => {
+          return getStoreData(s);
+        });
+    }
+    return getStoreData(store);
+  });
+}
+
 const setStore = storeUpdate => {
   const currentStore = getStoreData(getStore());
-  localStorage.setItem(
+  localForage.setItem(
     STORE_KEY,
     JSON.stringify({
       ...currentStore,
@@ -217,11 +233,15 @@ function Todo({ todo, index, toggleTodo, removeTodo, updateTodo }) {
   );
 }
 
-function App() {
-  const [todos, setTodos] = useState(() => {
-    const store = getStore();
-    return store.todos || [];
-  });
+let database;
+
+function TodoList() {
+  if (!database) {
+    const promise = hydrateDatabase().then(db => (database = db));
+    throw promise;
+  }
+  const [todos, setTodos] = useState(database.todos);
+
   const syncTodos = newTodos => {
     setTodos(newTodos);
     setStore({
@@ -247,7 +267,6 @@ function App() {
   };
 
   const updateTodo = todo => {
-    console.log("update", todo);
     const newTodos = todos.map(t => (t.id === todo.id ? { ...t, ...todo } : t));
     syncTodos(newTodos);
   };
@@ -275,4 +294,12 @@ function App() {
   );
 }
 
-export default App;
+const Fallback = () => <div>Loading...</div>;
+
+export default function App() {
+  return (
+    <Suspense fallback={<Fallback />}>
+      <TodoList />
+    </Suspense>
+  );
+}
