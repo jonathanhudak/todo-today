@@ -100,7 +100,9 @@ const setStore = storeUpdate => {
 function DayPicker({ defaultSelectedDays, onSetSelectedDays }) {
   const [selectedDays, setSelectedDays] = useState(defaultSelectedDays);
   const isDaySelected = day => selectedDays.includes(getDay(day));
-  const allDaysChecked = selectedDays === ALL_DAYS_SELECTED;
+  const allDaysChecked = selectedDays.every(day =>
+    ALL_DAYS_SELECTED.includes(day)
+  );
   function syncDays(nextDays) {
     setSelectedDays(nextDays);
     onSetSelectedDays(nextDays);
