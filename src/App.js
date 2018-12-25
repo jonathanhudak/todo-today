@@ -67,9 +67,7 @@ const getStoreData = store => {
 const getStore = async () => {
   const store = await localForage.getItem(STORE_KEY);
   if (!store) {
-    await localForage
-      .setItem(STORE_KEY, JSON.stringify(DEFAULT_STATE))
-      .then(console.log);
+    await localForage.setItem(STORE_KEY, JSON.stringify(DEFAULT_STATE));
     return DEFAULT_STATE;
   }
   return getStoreData(store);
