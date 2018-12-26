@@ -1,8 +1,8 @@
-import React, { Suspense, useState } from "react";
-import localForage from "localforage";
-import "./App.css";
+import React, { Suspense, useState } from 'react';
+import localForage from 'localforage';
+import './App.css';
 
-function makeUniqueIdGenerator(id = "") {
+function makeUniqueIdGenerator(id = '') {
   let i = 0;
   return function() {
     i += 1;
@@ -10,15 +10,15 @@ function makeUniqueIdGenerator(id = "") {
   };
 }
 
-const everyDay = "everyDay";
+const everyDay = 'everyDay';
 const days = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday"
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
 ];
 const DAYS = Object.freeze(
   days.reduce((acc, d, index) => ({ ...acc, [d]: index }), {})
@@ -26,38 +26,38 @@ const DAYS = Object.freeze(
 const getDay = day => DAYS[day];
 const ALL_DAYS_SELECTED = days.map(getDay);
 
-const createUniqueId = makeUniqueIdGenerator("todo");
+const createUniqueId = makeUniqueIdGenerator('todo');
 
 const DEFAULT_TODOS = [
   {
     id: createUniqueId(),
     days: ALL_DAYS_SELECTED,
-    text: "doodle",
-    isCompleted: false
+    text: 'doodle',
+    isCompleted: false,
   },
   {
     id: createUniqueId(),
     days: ALL_DAYS_SELECTED,
-    text: "60 push ups",
-    isCompleted: false
+    text: '60 push ups',
+    isCompleted: false,
   },
   {
     id: createUniqueId(),
     days: ALL_DAYS_SELECTED,
-    text: "100 Russian Twists",
-    isCompleted: false
-  }
+    text: '100 Russian Twists',
+    isCompleted: false,
+  },
 ];
 
 const DEFAULT_STATE = {
   todos: DEFAULT_TODOS,
-  history: {}
+  history: {},
 };
 
-const STORE_KEY = "ticboxStore";
+const STORE_KEY = 'ticboxStore';
 const getStoreData = store => {
   try {
-    if (typeof store === "string") {
+    if (typeof store === 'string') {
       return JSON.parse(store);
     }
     return store;
@@ -92,7 +92,7 @@ const setStore = storeUpdate => {
     STORE_KEY,
     JSON.stringify({
       ...currentStore,
-      ...storeUpdate
+      ...storeUpdate,
     })
   );
 };
@@ -149,7 +149,7 @@ function DayPicker({ defaultSelectedDays, onSetSelectedDays }) {
   );
 }
 
-function TodoForm({ cancel, todo, save, defaultValue = "" }) {
+function TodoForm({ cancel, todo, save, defaultValue = '' }) {
   const [value, setValue] = useState(defaultValue);
   const [selectedDays, setSelectedDays] = useState(
     todo ? todo.days : ALL_DAYS_SELECTED
@@ -160,9 +160,9 @@ function TodoForm({ cancel, todo, save, defaultValue = "" }) {
     if (!value) return;
     save({
       text: value,
-      days: selectedDays
+      days: selectedDays,
     });
-    setValue("");
+    setValue('');
   };
 
   return (
@@ -201,7 +201,7 @@ function Todo({ todo, index, toggleTodo, removeTodo, updateTodo }) {
           save={update => {
             updateTodo({
               ...todo,
-              ...update
+              ...update,
             });
             setNotEditing();
           }}
@@ -215,7 +215,7 @@ function Todo({ todo, index, toggleTodo, removeTodo, updateTodo }) {
     <div
       className="todo"
       style={{
-        textDecoration: todo.isCompleted ? "line-through" : ""
+        textDecoration: todo.isCompleted ? 'line-through' : '',
       }}
     >
       <input
@@ -245,7 +245,7 @@ function TodoList() {
   const syncTodos = newTodos => {
     setTodos(newTodos);
     setStore({
-      todos: newTodos
+      todos: newTodos,
     });
   };
 

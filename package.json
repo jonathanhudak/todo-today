@@ -13,9 +13,18 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "test:staged": "CI=true react-scripts test --env=jsdom --findRelatedTests",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+    "precommit": "lint-staged"
+  },
+  "lint-staged": {
+    "*/*.{js,jsx,json}": [
+      "npm run test:staged",
+      "eslint --fix",
+      "git add"
+    ]
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -27,6 +36,13 @@
     "not op_mini all"
   ],
   "devDependencies": {
-    "gh-pages": "^2.0.1"
+    "eslint-config-prettier": "^3.3.0",
+    "eslint-plugin-prettier": "^3.0.0",
+    "gh-pages": "^2.0.1",
+    "husky": "^1.2.1",
+    "jest-dom": "^3.0.0",
+    "lint-staged": "^8.1.0",
+    "prettier": "^1.15.3",
+    "react-testing-library": "^5.4.2"
   }
 }
