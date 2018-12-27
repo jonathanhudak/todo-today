@@ -98,22 +98,18 @@ function DayPicker({ defaultSelectedDays, onSetSelectedDays }) {
         />
         {messages.allDaysLabel}
       </label>
-      {!allDaysChecked && (
-        <>
-          &nbsp;—&nbsp;
-          {dayNamesEnglish.map(day => (
-            <label key={day}>
-              <input
-                type="checkbox"
-                value={day}
-                checked={isDaySelected(day)}
-                onChange={toggleCheckDay}
-              />
-              {day}
-            </label>
-          ))}
-        </>
-      )}
+      &nbsp;—&nbsp;
+      {dayNamesEnglish.map(day => (
+        <label key={day}>
+          <input
+            type="checkbox"
+            value={day}
+            checked={isDaySelected(day)}
+            onChange={toggleCheckDay}
+          />
+          {day}
+        </label>
+      ))}
     </fieldset>
   );
 }
@@ -216,7 +212,7 @@ function Todo({ todo, index, toggleTodo, removeTodo, updateTodo }) {
   );
 }
 
-export function TodoList({ defaultTodos = [] }) {
+function useTodoList(defaultTodos = []) {
   const [todos, setTodos] = useState(defaultTodos);
 
   const syncTodos = newTodos => {
@@ -241,28 +237,44 @@ export function TodoList({ defaultTodos = [] }) {
     syncTodos(newTodos);
   };
 
-  const updateTodo = todo => {
-    const newTodos = todos.map(t => (t.id === todo.id ? { ...t, ...todo } : t));
+  const updateTodo = newTodo => {
+    const newTodos = todos.map(todo => {
+      if (newTodo.id !== todo.id) return todo;
+      return { ...todo, ...newTodo };
+    });
     syncTodos(newTodos);
   };
 
+  return {
+    todos,
+    updateTodo,
+    removeTodo,
+    toggleTodo,
+    addTodo,
+  };
+}
+
+export function TodoList({ defaultTodos = [] }) {
+  const { todos, addTodo, toggleTodo, removeTodo, updateTodo } = useTodoList(
+    defaultTodos
+  );
+
   return (
-    <div className="app">
-      <div className="todo-list">
+    <div>
+      <div>
         <ul>
-          {Array.isArray(todos) &&
-            todos.map((todo, index) => (
-              <li key={index} style={{ padding: 10 }}>
-                <Todo
-                  index={index}
-                  todo={todo}
-                  toggleTodo={toggleTodo}
-                  removeTodo={removeTodo}
-                  updateTodo={updateTodo}
-                />
-              </li>
-            ))}
-          <li style={{ padding: 20 }}>
+          {todos.map((todo, index) => (
+            <li key={index}>
+              <Todo
+                index={index}
+                todo={todo}
+                toggleTodo={toggleTodo}
+                removeTodo={removeTodo}
+                updateTodo={updateTodo}
+              />
+            </li>
+          ))}
+          <li>
             <TodoForm save={addTodo} />
           </li>
         </ul>
