@@ -10,91 +10,60 @@ function makeUniqueIdGenerator(id = '') {
   };
 }
 
-const everyDay = 'everyDay';
-const days = [
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-  'Sunday',
+export const messages = {
+  allDaysLabel: 'All days of the week',
+  editLabel: 'Edit',
+  saveLabel: 'Save',
+};
+
+export const everyDay = 'everyDay';
+export const Monday = 'Monday';
+export const Tuesday = 'Tuesday';
+export const Wednesday = 'Wednesday';
+export const Thursday = 'Thursday';
+export const Friday = 'Friday';
+export const Saturday = 'Saturday';
+export const Sunday = 'Sunday';
+export const dayNamesEnglish = [
+  Monday,
+  Tuesday,
+  Wednesday,
+  Thursday,
+  Friday,
+  Saturday,
+  Sunday,
 ];
 const DAYS = Object.freeze(
-  days.reduce((acc, d, index) => ({ ...acc, [d]: index }), {})
+  dayNamesEnglish.reduce((acc, d, index) => ({ ...acc, [d]: index }), {})
 );
 const getDay = day => DAYS[day];
-const ALL_DAYS_SELECTED = days.map(getDay);
+const ALL_DAYS_SELECTED = dayNamesEnglish.map(getDay);
 
 const createUniqueId = makeUniqueIdGenerator('todo');
 
-const DEFAULT_TODOS = [
-  {
-    id: createUniqueId(),
-    days: ALL_DAYS_SELECTED,
-    text: 'doodle',
-    isCompleted: false,
-  },
-  {
-    id: createUniqueId(),
-    days: ALL_DAYS_SELECTED,
-    text: '60 push ups',
-    isCompleted: false,
-  },
-  {
-    id: createUniqueId(),
-    days: ALL_DAYS_SELECTED,
-    text: '100 Russian Twists',
-    isCompleted: false,
-  },
-];
+export const createDefaultTodo = text => ({
+  id: createUniqueId(),
+  days: ALL_DAYS_SELECTED,
+  text,
+  isCompleted: false,
+});
+export const DEFAULT_TODOS = [];
+export const DB_TODOS_KEY = 'todos';
+export const STORE_KEY = 'ticboxStore';
 
-const DEFAULT_STATE = {
-  todos: DEFAULT_TODOS,
-  history: {},
-};
-
-const STORE_KEY = 'ticboxStore';
-const getStoreData = store => {
+const getTodos = async () => {
   try {
-    if (typeof store === 'string') {
-      return JSON.parse(store);
+    let store = await localForage.getItem(DB_TODOS_KEY);
+    if (!store) {
+      await localForage.setItem(DB_TODOS_KEY, DEFAULT_TODOS);
+      store = await localForage.getItem(DB_TODOS_KEY);
     }
     return store;
   } catch (e) {}
 };
 
-const getStore = async () => {
-  const store = await localForage.getItem(STORE_KEY);
-  if (!store) {
-    await localForage.setItem(STORE_KEY, JSON.stringify(DEFAULT_STATE));
-    return DEFAULT_STATE;
-  }
-  return getStoreData(store);
-};
-
-function hydrateDatabase() {
-  return getStore().then(store => {
-    if (!store) {
-      return localForage
-        .setItem(STORE_KEY, JSON.stringify(DEFAULT_STATE))
-        .then(s => {
-          return getStoreData(s);
-        });
-    }
-    return getStoreData(store);
-  });
-}
-
-const setStore = storeUpdate => {
-  const currentStore = getStoreData(getStore());
-  localForage.setItem(
-    STORE_KEY,
-    JSON.stringify({
-      ...currentStore,
-      ...storeUpdate,
-    })
-  );
+const saveTodos = todos => {
+  return localForage.setItem(DB_TODOS_KEY, todos);
 };
 
 function DayPicker({ defaultSelectedDays, onSetSelectedDays }) {
@@ -127,12 +96,12 @@ function DayPicker({ defaultSelectedDays, onSetSelectedDays }) {
           checked={allDaysChecked}
           onChange={() => syncDays(allDaysChecked ? [] : ALL_DAYS_SELECTED)}
         />
-        All days of the week
+        {messages.allDaysLabel}
       </label>
       {!allDaysChecked && (
         <>
           &nbsp;—&nbsp;
-          {days.map(day => (
+          {dayNamesEnglish.map(day => (
             <label key={day}>
               <input
                 type="checkbox"
@@ -148,6 +117,8 @@ function DayPicker({ defaultSelectedDays, onSetSelectedDays }) {
     </fieldset>
   );
 }
+
+export const TODO_PLACEHOLDER = 'Climb Mt Rainier';
 
 function TodoForm({ cancel, todo, save, defaultValue = '' }) {
   const [value, setValue] = useState(defaultValue);
@@ -170,9 +141,10 @@ function TodoForm({ cancel, todo, save, defaultValue = '' }) {
       <label>
         Todo&nbsp;
         <input
+          autoFocus
           type="text"
           className="input"
-          placeholder="Climb Mt Rainier"
+          placeholder={TODO_PLACEHOLDER}
           value={value}
           onChange={e => setValue(e.target.value)}
         />
@@ -183,12 +155,17 @@ function TodoForm({ cancel, todo, save, defaultValue = '' }) {
           onSetSelectedDays={setSelectedDays}
         />
       )}
-      <button type="submit">Save</button>
-      <button onClick={cancel}>Cancel</button>
+      <button type="submit">{messages.saveLabel}</button>
+      {!!defaultValue && <button onClick={cancel}>Cancel</button>}
     </form>
   );
 }
 
+export const todoAriaLabelPart1 = 'Mark';
+export const todoAriaLabelPart2 = 'as completed';
+export const generateAriaLabelForTodo = ({ text }) =>
+  `${todoAriaLabelPart1} ${text} ${todoAriaLabelPart2}`;
+export const generateAriaLabelForEditTodoButton = ({ text }) => `Edit ${text}`;
 function Todo({ todo, index, toggleTodo, removeTodo, updateTodo }) {
   const [isEditing, setIsEditing] = useState(false);
   const setEditing = () => setIsEditing(true);
@@ -219,6 +196,7 @@ function Todo({ todo, index, toggleTodo, removeTodo, updateTodo }) {
       }}
     >
       <input
+        aria-label={generateAriaLabelForTodo(todo)}
         type="checkbox"
         checked={todo.isCompleted}
         onChange={() => toggleTodo(index)}
@@ -226,27 +204,24 @@ function Todo({ todo, index, toggleTodo, removeTodo, updateTodo }) {
       {todo.text}
 
       <div>
-        <button onClick={setEditing}>Edit</button>
+        <button
+          aria-label={generateAriaLabelForEditTodoButton(todo)}
+          onClick={setEditing}
+        >
+          {messages.editLabel}
+        </button>
         <button onClick={() => removeTodo(index)}>x</button>
       </div>
     </div>
   );
 }
 
-let database;
-
-function TodoList() {
-  if (!database) {
-    const promise = hydrateDatabase().then(db => (database = db));
-    throw promise;
-  }
-  const [todos, setTodos] = useState(database.todos);
+export function TodoList({ defaultTodos = [] }) {
+  const [todos, setTodos] = useState(defaultTodos);
 
   const syncTodos = newTodos => {
     setTodos(newTodos);
-    setStore({
-      todos: newTodos,
-    });
+    saveTodos(newTodos);
   };
 
   const addTodo = todo => {
@@ -274,21 +249,23 @@ function TodoList() {
   return (
     <div className="app">
       <div className="todo-list">
-        {Array.isArray(todos) &&
-          todos.map((todo, index) => (
-            <div key={index} style={{ padding: 20 }}>
-              <Todo
-                index={index}
-                todo={todo}
-                toggleTodo={toggleTodo}
-                removeTodo={removeTodo}
-                updateTodo={updateTodo}
-              />
-            </div>
-          ))}
-        <div style={{ padding: 20 }}>
-          <TodoForm save={addTodo} />
-        </div>
+        <ul>
+          {Array.isArray(todos) &&
+            todos.map((todo, index) => (
+              <li key={index} style={{ padding: 10 }}>
+                <Todo
+                  index={index}
+                  todo={todo}
+                  toggleTodo={toggleTodo}
+                  removeTodo={removeTodo}
+                  updateTodo={updateTodo}
+                />
+              </li>
+            ))}
+          <li style={{ padding: 20 }}>
+            <TodoForm save={addTodo} />
+          </li>
+        </ul>
       </div>
     </div>
   );
@@ -296,10 +273,25 @@ function TodoList() {
 
 const Fallback = () => <div>Loading...</div>;
 
+function generateTodoList() {
+  let todos;
+  return () => {
+    if (!todos) {
+      const promise = getTodos().then(td => {
+        todos = td;
+      });
+      throw promise;
+    }
+    return <TodoList defaultTodos={todos} />;
+  };
+}
+
+const TodoListWithDB = generateTodoList();
+
 export default function App() {
   return (
     <Suspense fallback={<Fallback />}>
-      <TodoList />
+      <TodoListWithDB />
     </Suspense>
   );
 }
