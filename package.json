@@ -13,9 +13,10 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "test:build": "CI=true react-scripts test --env=jsdom",
     "test:staged": "CI=true react-scripts test --env=jsdom --findRelatedTests",
     "eject": "react-scripts eject",
-    "predeploy": "npm run build",
+    "predeploy": "npm run test:build && npm run build",
     "deploy": "gh-pages -d build",
     "precommit": "lint-staged"
   },
