@@ -1,18 +1,30 @@
 import React from 'react';
 import { render, fireEvent } from 'react-testing-library';
 import {
-  createDefaultTodo,
-  TODO_PLACEHOLDER,
-  todoAriaLabelPart1,
-  todoAriaLabelPart2,
-  generateAriaLabelForTodo,
-  generateAriaLabelForEditTodoButton,
-  TodoList,
-  messages,
+  makeUniqueIdGenerator,
+  dayNamesEnglish,
   Monday,
   Tuesday,
-  dayNamesEnglish,
-} from './App';
+  ALL_DAYS_SELECTED,
+} from 'shared';
+import TodoList from 'app/TodoList';
+import { messages as todoFormMessages } from 'app/TodoForm';
+import { messages as dayPickerMessage } from 'app/DayPicker';
+import {
+  messages as todoMessage,
+  generateAriaLabelForTodo,
+  generateAriaLabelForEditTodoButton,
+  todoAriaLabelPart1,
+  todoAriaLabelPart2,
+} from 'app/TodoListItem';
+
+const createUniqueId = makeUniqueIdGenerator('todo');
+export const createDefaultTodo = text => ({
+  id: createUniqueId(),
+  days: ALL_DAYS_SELECTED,
+  text,
+  isCompleted: false,
+});
 
 test('no todos', () => {
   const { queryByLabelText } = render(<TodoList />);
@@ -28,8 +40,8 @@ test('create a todo with defaults', () => {
     <TodoList />
   );
   // Given an empty todo list
-  const saveButton = getByText(messages.saveLabel);
-  const input = getByPlaceholderText(TODO_PLACEHOLDER);
+  const saveButton = getByText(todoFormMessages.saveLabel);
+  const input = getByPlaceholderText(todoFormMessages.todoTextPlaceholder);
 
   // When I add a todo and save
   fireEvent.change(input, {
@@ -40,7 +52,7 @@ test('create a todo with defaults', () => {
   // Then my todo is saved and has default days selected
   expect(getByText('Yowzer')).toBeInTheDocument();
   fireEvent.click(getByText('Edit'));
-  const selectedDays = getByLabelText(messages.allDaysLabel);
+  const selectedDays = getByLabelText(dayPickerMessage.allDaysLabel);
   expect(selectedDays).toHaveAttribute('checked');
 });
 
@@ -49,22 +61,24 @@ test('create a todo with with custom days', () => {
     <TodoList />
   );
   // Given an empty todo list
-  const saveButton = getByText(messages.saveLabel);
-  const input = getByPlaceholderText(TODO_PLACEHOLDER);
+  const saveButton = getByText(todoFormMessages.saveLabel);
+  const input = getByPlaceholderText(todoFormMessages.todoTextPlaceholder);
 
   // When I add a todo and select only Monday and Tuesday
   fireEvent.change(input, {
     target: { value: 'Yowzer' },
   });
-  fireEvent.click(getByLabelText(messages.allDaysLabel));
+  fireEvent.click(getByLabelText(dayPickerMessage.allDaysLabel));
   fireEvent.click(getByLabelText(Monday));
   fireEvent.click(getByLabelText(Tuesday));
   fireEvent.click(saveButton);
 
   // Then my todo is saved and has expected days selected
   expect(getByText('Yowzer')).toBeInTheDocument();
-  fireEvent.click(getByText(messages.editLabel));
-  expect(getByLabelText(messages.allDaysLabel)).not.toHaveAttribute('checked');
+  fireEvent.click(getByText(todoMessage.editLabel));
+  expect(getByLabelText(dayPickerMessage.allDaysLabel)).not.toHaveAttribute(
+    'checked'
+  );
   expect(getByLabelText(Monday)).toHaveAttribute('checked');
   expect(getByLabelText(Tuesday)).toHaveAttribute('checked');
 });
@@ -105,8 +119,8 @@ test('edit a todo', () => {
   fireEvent.change(input, {
     target: { value: newValue },
   });
-  fireEvent.click(queryByLabelText(messages.allDaysLabel));
-  fireEvent.click(getByText(messages.saveLabel));
+  fireEvent.click(queryByLabelText(dayPickerMessage.allDaysLabel));
+  fireEvent.click(getByText(todoFormMessages.saveLabel));
 
   // Then I no longer see the old todo value but the new one
   expect(
@@ -120,8 +134,8 @@ test('edit a todo', () => {
       })
     )
   ).toBeInTheDocument();
-  fireEvent.click(getByText(messages.editLabel));
-  expect(queryByLabelText(messages.allDaysLabel)).not.toHaveAttribute(
+  fireEvent.click(getByText(todoMessage.editLabel));
+  expect(queryByLabelText(dayPickerMessage.allDaysLabel)).not.toHaveAttribute(
     'checked'
   );
   dayNamesEnglish.forEach(d =>

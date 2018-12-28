@@ -4,6 +4,7 @@
   "private": true,
   "homepage": "https://jonathanhudak.com/todo-today",
   "dependencies": {
+    "@reach/router": "^1.2.1",
     "localforage": "^1.7.3",
     "react": "^16.7.0-alpha.2",
     "react-cache": "^2.0.0-alpha.1",
