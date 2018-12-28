@@ -1,5 +1,6 @@
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import localForage from 'localforage';
+import { unstable_createResource as createResource } from 'react-cache';
 import './App.css';
 
 function makeUniqueIdGenerator(id = '') {
@@ -62,9 +63,7 @@ const getTodos = async () => {
   } catch (e) {}
 };
 
-const saveTodos = todos => {
-  return localForage.setItem(DB_TODOS_KEY, todos);
-};
+const todosResource = createResource(getTodos);
 
 function DayPicker({ defaultSelectedDays, onSetSelectedDays }) {
   const [selectedDays, setSelectedDays] = useState(defaultSelectedDays);
@@ -215,26 +214,28 @@ function Todo({ todo, index, toggleTodo, removeTodo, updateTodo }) {
 function useTodoList(defaultTodos = []) {
   const [todos, setTodos] = useState(defaultTodos);
 
-  const syncTodos = newTodos => {
-    setTodos(newTodos);
-    saveTodos(newTodos);
-  };
+  useEffect(
+    () => {
+      localForage.setItem(DB_TODOS_KEY, todos);
+    },
+    [todos]
+  );
 
   const addTodo = todo => {
     const newTodos = [...todos, { id: createUniqueId(), ...todo }];
-    syncTodos(newTodos);
+    setTodos(newTodos);
   };
 
   const toggleTodo = index => {
     const newTodos = [...todos];
     newTodos[index].isCompleted = !newTodos[index].isCompleted;
-    syncTodos(newTodos);
+    setTodos(newTodos);
   };
 
   const removeTodo = index => {
     const newTodos = [...todos];
     newTodos.splice(index, 1);
-    syncTodos(newTodos);
+    setTodos(newTodos);
   };
 
   const updateTodo = newTodo => {
@@ -242,7 +243,7 @@ function useTodoList(defaultTodos = []) {
       if (newTodo.id !== todo.id) return todo;
       return { ...todo, ...newTodo };
     });
-    syncTodos(newTodos);
+    setTodos(newTodos);
   };
 
   return {
@@ -285,25 +286,15 @@ export function TodoList({ defaultTodos = [] }) {
 
 const Fallback = () => <div>Loading...</div>;
 
-function generateTodoList() {
-  let todos;
-  return () => {
-    if (!todos) {
-      const promise = getTodos().then(td => {
-        todos = td;
-      });
-      throw promise;
-    }
-    return <TodoList defaultTodos={todos} />;
-  };
-}
-
-const TodoListWithDB = generateTodoList();
+const LiveTodoList = () => {
+  const todos = todosResource.read();
+  return <TodoList defaultTodos={todos} />;
+};
 
 export default function App() {
   return (
     <Suspense fallback={<Fallback />}>
-      <TodoListWithDB />
+      <LiveTodoList />
     </Suspense>
   );
 }
