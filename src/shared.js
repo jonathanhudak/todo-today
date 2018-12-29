@@ -63,9 +63,7 @@ export function useFilters(filters = {}) {
   return {
     allFilterNames,
     currentFilters: currentFilters.map(n => filters[n]),
-    addFilter,
     isFilterActive,
-    removeFilter,
     toggleFilter,
   };
 }
