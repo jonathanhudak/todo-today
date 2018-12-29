@@ -15,13 +15,13 @@ export const Friday = 'Friday';
 export const Saturday = 'Saturday';
 export const Sunday = 'Sunday';
 export const dayNamesEnglish = [
+  Sunday,
   Monday,
   Tuesday,
   Wednesday,
   Thursday,
   Friday,
   Saturday,
-  Sunday,
 ];
 export const DAYS = Object.freeze(
   dayNamesEnglish.reduce((acc, d, index) => ({ ...acc, [d]: index }), {})
@@ -49,9 +49,44 @@ export const getTodos = async () => {
   } catch (e) {}
 };
 
-export function useTodoList(defaultTodos = []) {
-  let generateId;
+export function useFilters(filters = {}) {
+  const allFilterNames = Object.keys(filters);
+  const [currentFilters, setFilters] = useState(allFilterNames);
+
+  const addFilter = name => setFilters([...currentFilters, name]);
+  const removeFilter = name =>
+    setFilters(currentFilters.filter(f => f !== name));
+  const isFilterActive = name => currentFilters.includes(name);
+  const toggleFilter = name =>
+    isFilterActive(name) ? removeFilter(name) : addFilter(name);
+
+  return {
+    allFilterNames,
+    currentFilters: currentFilters.map(n => filters[n]),
+    addFilter,
+    isFilterActive,
+    removeFilter,
+    toggleFilter,
+  };
+}
+
+export const generateTodayFilter = today => ({ days }) => {
+  return days.includes(today || new Date().getDay());
+};
+
+const Today = 'Today';
+
+export const getTodoFilters = ({ today } = {}) => ({
+  [Today]: generateTodayFilter(today),
+});
+
+export function useTodoList(
+  defaultTodos = [],
+  defaultFilters = getTodoFilters()
+) {
+  const generateId = makeUniqueIdGenerator('todo', defaultTodos.length - 1);
   const [todos, setTodos] = useState(defaultTodos);
+  const { currentFilters, ...filterProps } = useFilters(defaultFilters);
 
   useEffect(
     () => {
@@ -59,10 +94,6 @@ export function useTodoList(defaultTodos = []) {
     },
     [todos]
   );
-
-  useEffect(() => {
-    generateId = makeUniqueIdGenerator('todo', defaultTodos.length - 1);
-  }, []);
 
   const addTodo = todo => {
     const newTodos = [...todos, { id: generateId(), ...todo }];
@@ -89,11 +120,15 @@ export function useTodoList(defaultTodos = []) {
     setTodos(newTodos);
   };
 
+  const filteredTodos = todos.filter(t => currentFilters.every(f => f(t)));
+
   return {
-    todos,
+    todos: filteredTodos,
+    filteredTodos,
     updateTodo,
     removeTodo,
     toggleTodo,
     addTodo,
+    ...filterProps,
   };
 }

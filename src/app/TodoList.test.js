@@ -6,6 +6,7 @@ import {
   Monday,
   Tuesday,
   ALL_DAYS_SELECTED,
+  getTodoFilters,
 } from 'shared';
 import TodoList from 'app/TodoList';
 import { messages as todoFormMessages } from 'app/TodoForm';
@@ -19,11 +20,12 @@ import {
 } from 'app/TodoListItem';
 
 const createUniqueId = makeUniqueIdGenerator('todo');
-export const createDefaultTodo = text => ({
+export const createDefaultTodo = (text, overrides) => ({
   id: createUniqueId(),
   days: ALL_DAYS_SELECTED,
   text,
   isCompleted: false,
+  ...overrides,
 });
 
 test('no todos', () => {
@@ -57,13 +59,13 @@ test('create a todo with defaults', () => {
 });
 
 test('create a todo with with custom days', () => {
+  const monday = 1;
   const { getByText, getByPlaceholderText, getByLabelText } = render(
-    <TodoList />
+    <TodoList defaultFilters={getTodoFilters({ today: monday })} />
   );
   // Given an empty todo list
   const saveButton = getByText(todoFormMessages.saveLabel);
   const input = getByPlaceholderText(todoFormMessages.todoTextPlaceholder);
-
   // When I add a todo and select only Monday and Tuesday
   fireEvent.change(input, {
     target: { value: 'Yowzer' },
@@ -98,7 +100,37 @@ test('list todos', () => {
   expect(getByLabelText(generateAriaLabelForTodo(todo2))).toBeInTheDocument();
 });
 
+test('filter todays todos', () => {
+  const monday = 1;
+  const tuesday = 2;
+  const mondayTodo = createDefaultTodo('Do this', { days: [monday] });
+  const tuesdayTodo = createDefaultTodo('Do that', { days: [tuesday] });
+  const defaultTodos = [mondayTodo, tuesdayTodo];
+
+  // Given it is Monday
+  // Then when I view my todo list filtered by the day be default
+  const { queryByLabelText, queryByText } = render(
+    <TodoList
+      defaultTodos={defaultTodos}
+      defaultFilters={getTodoFilters({ today: monday })}
+    />
+  );
+
+  // Then I see my monday todo
+  expect(queryByText(mondayTodo.text)).toBeInTheDocument();
+  expect(
+    queryByLabelText(generateAriaLabelForTodo(mondayTodo))
+  ).toBeInTheDocument();
+
+  // And not my tuesday todo
+  expect(queryByText(tuesdayTodo.text)).not.toBeInTheDocument();
+  expect(
+    queryByLabelText(generateAriaLabelForTodo(tuesdayTodo))
+  ).not.toBeInTheDocument();
+});
+
 test('edit a todo', () => {
+  const monday = 1;
   const oldValue = 'Do this';
   const newValue = '100 Russian twists';
   const todo = createDefaultTodo(oldValue);
@@ -106,7 +138,10 @@ test('edit a todo', () => {
   const editButtonLabel = generateAriaLabelForEditTodoButton(todo);
   // Given a todo list with an existing todo
   const { container, queryByLabelText, getByText } = render(
-    <TodoList defaultTodos={[todo, todo2]} />
+    <TodoList
+      defaultTodos={[todo, todo2]}
+      defaultFilters={getTodoFilters({ today: monday })}
+    />
   );
   expect(
     queryByLabelText(generateAriaLabelForEditTodoButton(todo))
@@ -120,6 +155,8 @@ test('edit a todo', () => {
     target: { value: newValue },
   });
   fireEvent.click(queryByLabelText(dayPickerMessage.allDaysLabel));
+  fireEvent.click(queryByLabelText(Monday));
+  fireEvent.click(queryByLabelText(Tuesday));
   fireEvent.click(getByText(todoFormMessages.saveLabel));
 
   // Then I no longer see the old todo value but the new one
@@ -138,7 +175,11 @@ test('edit a todo', () => {
   expect(queryByLabelText(dayPickerMessage.allDaysLabel)).not.toHaveAttribute(
     'checked'
   );
-  dayNamesEnglish.forEach(d =>
-    expect(queryByLabelText(d)).not.toHaveAttribute('checked')
-  );
+  dayNamesEnglish.forEach(d => {
+    if (d === Monday || d === Tuesday) {
+      expect(queryByLabelText(d)).toHaveAttribute('checked');
+    } else {
+      expect(queryByLabelText(d)).not.toHaveAttribute('checked');
+    }
+  });
 });

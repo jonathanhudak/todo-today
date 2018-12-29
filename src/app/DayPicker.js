@@ -35,24 +35,24 @@ export default function DayPicker({ defaultSelectedDays, onSetSelectedDays }) {
     <fieldset>
       <legend>Day</legend>
       <label>
+        {messages.allDaysLabel}
         <input
           type="checkbox"
           value={everyDay}
           checked={allDaysChecked}
           onChange={() => syncDays(allDaysChecked ? [] : ALL_DAYS_SELECTED)}
         />
-        {messages.allDaysLabel}
       </label>
       &nbsp;—&nbsp;
       {dayNamesEnglish.map(day => (
         <label key={day}>
+          {day}
           <input
             type="checkbox"
             value={day}
             checked={isDaySelected(day)}
             onChange={toggleCheckDay}
           />
-          {day}
         </label>
       ))}
     </fieldset>
