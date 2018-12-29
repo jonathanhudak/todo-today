@@ -6,6 +6,9 @@ export const messages = {
   deleteLabel: 'Remove',
 };
 
+export const generateAriaLabelForDeleteButton = ({ text }) =>
+  `${messages.deleteLabel} ${text}`;
+
 export const todoAriaLabelPart1 = 'Mark';
 export const todoAriaLabelPart2 = 'as completed';
 export const generateAriaLabelForTodo = ({ text }) =>
@@ -14,7 +17,6 @@ export const generateAriaLabelForEditTodoButton = ({ text }) => `Edit ${text}`;
 
 export default function TodoListItem({
   todo,
-  index,
   toggleTodo,
   removeTodo,
   updateTodo,
@@ -48,7 +50,7 @@ export default function TodoListItem({
         aria-label={generateAriaLabelForTodo(todo)}
         type="checkbox"
         checked={todo.isCompleted}
-        onChange={() => toggleTodo(index)}
+        onChange={() => toggleTodo(todo.id, new Date())}
       />
       {todo.text}
 
@@ -59,7 +61,10 @@ export default function TodoListItem({
         >
           {messages.editLabel}
         </button>
-        <button onClick={() => removeTodo(index)}>
+        <button
+          aria-label={generateAriaLabelForDeleteButton(todo)}
+          onClick={() => removeTodo(todo)}
+        >
           {messages.deleteLabel}
         </button>
       </div>

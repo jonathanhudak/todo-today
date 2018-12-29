@@ -1,4 +1,5 @@
 import React from 'react';
+import moment from 'moment';
 import { render, fireEvent } from 'react-testing-library';
 import {
   makeUniqueIdGenerator,
@@ -17,9 +18,13 @@ import {
   generateAriaLabelForEditTodoButton,
   todoAriaLabelPart1,
   todoAriaLabelPart2,
+  generateAriaLabelForDeleteButton,
 } from 'app/TodoListItem';
 
 const createUniqueId = makeUniqueIdGenerator('todo');
+
+const TEST_MONDAY = moment('2018-12-24');
+
 export const createDefaultTodo = (text, overrides) => ({
   id: createUniqueId(),
   days: ALL_DAYS_SELECTED,
@@ -59,9 +64,8 @@ test('create a todo with defaults', () => {
 });
 
 test('create a todo with with custom days', () => {
-  const monday = 1;
   const { getByText, getByPlaceholderText, getByLabelText } = render(
-    <TodoList defaultFilters={getTodoFilters({ today: monday })} />
+    <TodoList defaultDay={TEST_MONDAY} />
   );
   // Given an empty todo list
   const saveButton = getByText(todoFormMessages.saveLabel);
@@ -91,7 +95,7 @@ test('list todos', () => {
   const defaultTodos = [todo1, todo2];
   // Given a todo list with existing todos
   const { getByLabelText, getByText } = render(
-    <TodoList defaultTodos={defaultTodos} />
+    <TodoList defaultTodos={defaultTodos} defaultDay={TEST_MONDAY} />
   );
   // Then I see each todo listed with a checkbox
   expect(getByText(todo1.text)).toBeInTheDocument();
@@ -110,10 +114,7 @@ test('filter todays todos', () => {
   // Given it is Monday
   // Then when I view my todo list filtered by the day be default
   const { queryByLabelText, queryByText } = render(
-    <TodoList
-      defaultTodos={defaultTodos}
-      defaultFilters={getTodoFilters({ today: monday })}
-    />
+    <TodoList defaultTodos={defaultTodos} defaultDay={TEST_MONDAY} />
   );
 
   // Then I see my monday todo
@@ -129,8 +130,31 @@ test('filter todays todos', () => {
   ).not.toBeInTheDocument();
 });
 
+test('remove a todo', () => {
+  const todo1 = createDefaultTodo('Do this');
+  const todo2 = createDefaultTodo('Do that');
+  const defaultTodos = [todo1, todo2];
+
+  // Given a list with 2 todos
+  const { queryByLabelText, queryByText } = render(
+    <TodoList defaultTodos={defaultTodos} />
+  );
+
+  // When I click the delete button of one todo
+  fireEvent.click(queryByLabelText(generateAriaLabelForDeleteButton(todo1)));
+
+  // Then I see the remaining todo
+  expect(queryByText(todo2.text)).toBeInTheDocument();
+  expect(queryByLabelText(generateAriaLabelForTodo(todo2))).toBeInTheDocument();
+
+  // And not the one I just removed
+  expect(queryByText(todo1.text)).not.toBeInTheDocument();
+  expect(
+    queryByLabelText(generateAriaLabelForTodo(todo1))
+  ).not.toBeInTheDocument();
+});
+
 test('edit a todo', () => {
-  const monday = 1;
   const oldValue = 'Do this';
   const newValue = '100 Russian twists';
   const todo = createDefaultTodo(oldValue);
@@ -138,10 +162,7 @@ test('edit a todo', () => {
   const editButtonLabel = generateAriaLabelForEditTodoButton(todo);
   // Given a todo list with an existing todo
   const { container, queryByLabelText, getByText } = render(
-    <TodoList
-      defaultTodos={[todo, todo2]}
-      defaultFilters={getTodoFilters({ today: monday })}
-    />
+    <TodoList defaultTodos={[todo, todo2]} defaultDay={TEST_MONDAY} />
   );
   expect(
     queryByLabelText(generateAriaLabelForEditTodoButton(todo))

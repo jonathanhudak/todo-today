@@ -1,25 +1,35 @@
 import React from 'react';
 import TodoForm from 'app/TodoForm';
 import TodoListItem from 'app/TodoListItem';
-import { useTodoList } from 'shared';
+import { useTodoList, useTodoHistory } from 'shared';
+import DayBrowser from 'app/DayBrowser';
+import { useDayBrowser } from 'shared';
 
-export default function TodoList({ defaultTodos = [], defaultFilters }) {
+export default function TodoList({
+  defaultTodos = [],
+  defaultHistory,
+  defaultDay,
+}) {
+  const dayBrowserProps = useDayBrowser(defaultDay);
+  const { day: currentSelectedDay } = dayBrowserProps;
   const {
     todos,
-    allFilterNames,
+    filters,
     toggleFilter,
     isFilterActive,
     addTodo,
-    toggleTodo,
     removeTodo,
     updateTodo,
-  } = useTodoList(defaultTodos, defaultFilters);
+  } = useTodoList(defaultTodos, currentSelectedDay);
+  const { history, toggleTodoForDay } = useTodoHistory(defaultHistory);
 
   return (
     <div>
+      <DayBrowser {...dayBrowserProps} />
+      <pre>{JSON.stringify(history, null, 2)}</pre>
       <div>
         Filters
-        {allFilterNames.map(name => (
+        {filters.map(name => (
           <label key={name}>
             {name}
             <input
@@ -35,7 +45,7 @@ export default function TodoList({ defaultTodos = [], defaultFilters }) {
               <TodoListItem
                 index={index}
                 todo={todo}
-                toggleTodo={toggleTodo}
+                toggleTodo={toggleTodoForDay}
                 removeTodo={removeTodo}
                 updateTodo={updateTodo}
               />
