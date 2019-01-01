@@ -16,6 +16,7 @@ export const generateAriaLabelForTodo = ({ text }) =>
 export const generateAriaLabelForEditTodoButton = ({ text }) => `Edit ${text}`;
 
 export default function TodoListItem({
+  isCompleted,
   todo,
   toggleTodo,
   removeTodo,
@@ -43,14 +44,14 @@ export default function TodoListItem({
   return (
     <div
       style={{
-        textDecoration: todo.isCompleted ? 'line-through' : '',
+        textDecoration: isCompleted ? 'line-through' : '',
       }}
     >
       <input
         aria-label={generateAriaLabelForTodo(todo)}
         type="checkbox"
-        checked={todo.isCompleted}
-        onChange={() => toggleTodo(todo.id, new Date())}
+        checked={isCompleted}
+        onChange={toggleTodo}
       />
       {todo.text}
 

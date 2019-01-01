@@ -11,6 +11,7 @@ export default function TodoList({
   defaultDay,
 }) {
   const { state } = useGlobalState();
+  const { currentDay } = state;
   const {
     todos,
     filters,
@@ -19,8 +20,11 @@ export default function TodoList({
     addTodo,
     removeTodo,
     updateTodo,
-  } = useTodoList(defaultTodos, state.currentDay);
-  const { history, toggleTodoForDay } = useTodoHistory(defaultHistory);
+  } = useTodoList(defaultTodos, currentDay);
+  const { history, toggleTodoForDay, isCompletedForDay } = useTodoHistory(
+    defaultHistory
+  );
+  const isTodoCompleted = ({ id }) => isCompletedForDay(id, currentDay);
 
   return (
     <div>
@@ -45,7 +49,8 @@ export default function TodoList({
               <TodoListItem
                 index={index}
                 todo={todo}
-                toggleTodo={toggleTodoForDay}
+                isCompleted={isTodoCompleted(todo)}
+                toggleTodo={() => toggleTodoForDay(todo.id, currentDay)}
                 removeTodo={removeTodo}
                 updateTodo={updateTodo}
               />

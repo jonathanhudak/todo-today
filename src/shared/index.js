@@ -1,6 +1,5 @@
 import { useEffect, useState, useContext } from 'react';
 import localForage from 'localforage';
-import isEqual from 'lodash/isEqual';
 import { Store } from 'app/Providers';
 import moment from 'moment';
 
@@ -54,47 +53,16 @@ export const getTodoHistory = async () => {
   } catch (e) {}
 };
 
-function formatDate(date) {
-  const year = date.getFullYear();
-  const month = date.getMonth();
-  const day = date.getDate();
+export function formatDate(date) {
+  const parsedDate = moment(date);
+  const year = parsedDate.year();
+  const month = parsedDate.month();
+  const day = parsedDate.date();
   return `${month}-${day}-${year}`;
 }
 
 export function useGlobalState() {
   return useContext(Store);
-}
-
-export function useTodoHistory(defaultHistory = {}) {
-  let lastHistory = defaultHistory;
-  const [history, setHistory] = useState(defaultHistory);
-
-  useEffect(() => {
-    if (!isEqual(lastHistory, history)) {
-      localForage.setItem(DB_TODOS_HISTORY_KEY, history);
-    }
-  });
-
-  const toggleTodoForDay = (todoId, day) => {
-    const date = formatDate(day);
-    if (!date) return;
-    const existingDayHistory = history[date] || [];
-    const isCompletedForDay = existingDayHistory.includes(todoId);
-    const nextTodoHistory = isCompletedForDay
-      ? existingDayHistory.filter(t => t !== todoId)
-      : [...existingDayHistory, todoId];
-    const nextHistory = {
-      ...history,
-      [date]: nextTodoHistory,
-    };
-    lastHistory = nextHistory;
-    setHistory(nextHistory);
-  };
-
-  return {
-    history,
-    toggleTodoForDay,
-  };
 }
 
 export const getTodos = async () => {
@@ -202,3 +170,4 @@ export function useTodoList(defaultTodos = [], day = moment()) {
 }
 
 export { useDayBrowser } from './useDayBrowser';
+export { useTodoHistory } from './useTodoHistory';
