@@ -95,38 +95,30 @@ export function useFilters(filters = {}) {
   };
 }
 
-export const generateTodayFilter = today => ({ days }) => {
-  return days.includes(today || new Date().getDay());
+export const generateTodayFilter = (today = moment().day()) => ({ days }) => {
+  return days.includes(today);
 };
 
 const Day = 'Day';
 
 // export const filterMoreRecentTodos = ({ createdAt }) =>
 export const requiredFilters = day => [];
-export const getTodoFilters = ({ day } = {}) => ({
-  [Day]: generateTodayFilter(day),
-});
+export const getTodoFilters = ({ day } = {}) => {
+  return {
+    [Day]: generateTodayFilter(day),
+  };
+};
 
 export function useTodoList(defaultTodos = [], day = moment()) {
   const generateId = makeUniqueIdGenerator('todo', defaultTodos.length - 1);
   const [todos, setTodos] = useState(defaultTodos);
-  const filters = getTodoFilters({ day: day.get('day') });
+  const getFilters = () => getTodoFilters({ day: day.get('day') });
   const { currentFilters, setFilters, ...filterProps } = useFilters(
-    Object.keys(filters)
+    Object.keys(getFilters())
   );
-  const activeFilters = [
-    ...currentFilters.map(k => filters[k]),
-    ...requiredFilters(day),
-  ];
 
+  const activeFilters = [...currentFilters.map(k => getFilters()[k])];
   const filteredTodos = todos.filter(t => activeFilters.every(f => f(t)));
-
-  useEffect(
-    () => {
-      setFilters(getTodoFilters({ day: day.get('day') }));
-    },
-    [day]
-  );
 
   useEffect(
     () => {
@@ -160,7 +152,7 @@ export function useTodoList(defaultTodos = [], day = moment()) {
 
   return {
     todos: filteredTodos,
-    filteredTodos,
+    allTodos: todos,
     updateTodo,
     removeTodo,
     toggleTodo,

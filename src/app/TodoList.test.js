@@ -1,6 +1,6 @@
 import React from 'react';
 import moment from 'moment';
-import { render, fireEvent } from 'react-testing-library';
+import { render, fireEvent, flushEffects } from 'react-testing-library';
 import {
   makeUniqueIdGenerator,
   dayNamesEnglish,
@@ -23,10 +23,11 @@ import {
 
 const createUniqueId = makeUniqueIdGenerator('todo');
 
+const TEST_SUNDAY = moment('2018-12-23');
 const TEST_MONDAY = moment('2018-12-24');
 
-function renderTodoList(children) {
-  return render(<AppProviders>{children}</AppProviders>);
+function renderTodoList(children, providerProps) {
+  return render(<AppProviders {...providerProps}>{children}</AppProviders>);
 }
 
 export const createDefaultTodo = (text, overrides) => ({
@@ -36,6 +37,18 @@ export const createDefaultTodo = (text, overrides) => ({
   isCompleted: false,
   ...overrides,
 });
+
+function assertTodoIsRendered(todo, { queryByText, queryByLabelText }) {
+  expect(queryByText(todo.text)).toBeInTheDocument();
+  expect(queryByLabelText(generateAriaLabelForTodo(todo))).toBeInTheDocument();
+}
+
+function assertTodoIsNotRendered(todo, { queryByText, queryByLabelText }) {
+  expect(queryByText(todo.text)).not.toBeInTheDocument();
+  expect(
+    queryByLabelText(generateAriaLabelForTodo(todo))
+  ).not.toBeInTheDocument();
+}
 
 test('no todos', () => {
   const { queryByLabelText } = renderTodoList(<TodoList />);
@@ -98,14 +111,12 @@ test('list todos', () => {
   const todo2 = createDefaultTodo('Do that');
   const defaultTodos = [todo1, todo2];
   // Given a todo list with existing todos
-  const { getByLabelText, getByText } = renderTodoList(
+  const renderResult = renderTodoList(
     <TodoList defaultTodos={defaultTodos} defaultDay={TEST_MONDAY} />
   );
   // Then I see each todo listed with a checkbox
-  expect(getByText(todo1.text)).toBeInTheDocument();
-  expect(getByLabelText(generateAriaLabelForTodo(todo1))).toBeInTheDocument();
-  expect(getByText(todo2.text)).toBeInTheDocument();
-  expect(getByLabelText(generateAriaLabelForTodo(todo2))).toBeInTheDocument();
+  assertTodoIsRendered(todo1, renderResult);
+  assertTodoIsRendered(todo2, renderResult);
 });
 
 test('filter todays todos', () => {
@@ -117,21 +128,18 @@ test('filter todays todos', () => {
 
   // Given it is Monday
   // Then when I view my todo list filtered by the day be default
-  const { queryByLabelText, queryByText } = renderTodoList(
-    <TodoList defaultTodos={defaultTodos} defaultDay={TEST_MONDAY} />
+  const renderResult = renderTodoList(
+    <TodoList defaultTodos={defaultTodos} />,
+    {
+      currentDay: TEST_MONDAY,
+    }
   );
 
   // Then I see my monday todo
-  expect(queryByText(mondayTodo.text)).toBeInTheDocument();
-  expect(
-    queryByLabelText(generateAriaLabelForTodo(mondayTodo))
-  ).toBeInTheDocument();
+  assertTodoIsRendered(mondayTodo, renderResult);
 
   // And not my tuesday todo
-  expect(queryByText(tuesdayTodo.text)).not.toBeInTheDocument();
-  expect(
-    queryByLabelText(generateAriaLabelForTodo(tuesdayTodo))
-  ).not.toBeInTheDocument();
+  assertTodoIsNotRendered(tuesdayTodo, renderResult);
 });
 
 test('remove a todo', () => {
@@ -140,22 +148,17 @@ test('remove a todo', () => {
   const defaultTodos = [todo1, todo2];
 
   // Given a list with 2 todos
-  const { queryByLabelText, queryByText } = renderTodoList(
-    <TodoList defaultTodos={defaultTodos} />
-  );
+  const renderResult = renderTodoList(<TodoList defaultTodos={defaultTodos} />);
+  const { queryByLabelText } = renderResult;
 
   // When I click the delete button of one todo
   fireEvent.click(queryByLabelText(generateAriaLabelForDeleteButton(todo1)));
 
   // Then I see the remaining todo
-  expect(queryByText(todo2.text)).toBeInTheDocument();
-  expect(queryByLabelText(generateAriaLabelForTodo(todo2))).toBeInTheDocument();
+  assertTodoIsRendered(todo2, renderResult);
 
   // And not the one I just removed
-  expect(queryByText(todo1.text)).not.toBeInTheDocument();
-  expect(
-    queryByLabelText(generateAriaLabelForTodo(todo1))
-  ).not.toBeInTheDocument();
+  assertTodoIsNotRendered(todo1, renderResult);
 });
 
 test('edit a todo', () => {
@@ -165,12 +168,13 @@ test('edit a todo', () => {
   const todo2 = createDefaultTodo('apple');
   const editButtonLabel = generateAriaLabelForEditTodoButton(todo);
   // Given a todo list with an existing todo
-  const { container, queryByLabelText, getByText } = renderTodoList(
-    <TodoList defaultTodos={[todo, todo2]} defaultDay={TEST_MONDAY} />
+  const renderResult = renderTodoList(
+    <TodoList defaultTodos={[todo, todo2]} />
   );
-  expect(
-    queryByLabelText(generateAriaLabelForEditTodoButton(todo))
-  ).toBeInTheDocument();
+  const { container, queryByLabelText, getByText } = renderResult;
+
+  assertTodoIsRendered(todo, renderResult);
+
   const editButton = queryByLabelText(editButtonLabel);
 
   // When I edit a todo and change its value and uncheck all days
@@ -207,4 +211,40 @@ test('edit a todo', () => {
       expect(queryByLabelText(d)).not.toHaveAttribute('checked');
     }
   });
+});
+
+test('on Sunday I do not see todos not assigned to Sunday', () => {
+  const todo = createDefaultTodo('Jog', { days: [1, 2, 3, 4, 5] });
+  const renderResult = renderTodoList(<TodoList defaultTodos={[todo]} />, {
+    currentDay: TEST_SUNDAY,
+  });
+
+  assertTodoIsNotRendered(todo, renderResult);
+});
+
+test('on Sunday I see todos assigned to Sunday', () => {
+  const todo = createDefaultTodo('Jog', { days: [0] });
+  const renderResult = renderTodoList(<TodoList defaultTodos={[todo]} />, {
+    currentDay: TEST_SUNDAY,
+  });
+
+  assertTodoIsRendered(todo, renderResult);
+});
+
+test('on Monday I do not see todos not assigned to Monday', () => {
+  const todo = createDefaultTodo('Jog', { days: [0, 2, 3, 4, 5] });
+  const renderResult = renderTodoList(<TodoList defaultTodos={[todo]} />, {
+    currentDay: TEST_MONDAY,
+  });
+
+  assertTodoIsNotRendered(todo, renderResult);
+});
+
+test('on Monday I see todos assigned to Monday', () => {
+  const todo = createDefaultTodo('Jog', { days: [1] });
+  const renderResult = renderTodoList(<TodoList defaultTodos={[todo]} />, {
+    currentDay: TEST_MONDAY,
+  });
+
+  assertTodoIsRendered(todo, renderResult);
 });

@@ -13,6 +13,7 @@ export default function TodoList({
   const { state } = useGlobalState();
   const { currentDay } = state;
   const {
+    allTodos,
     todos,
     filters,
     toggleFilter,
@@ -29,8 +30,6 @@ export default function TodoList({
   return (
     <div>
       <DayBrowser />
-      <pre>{JSON.stringify(history, null, 2)}</pre>
-      <pre>{JSON.stringify(state, null, 2)}</pre>
       <div>
         Filters
         {filters.map(name => (
@@ -60,6 +59,11 @@ export default function TodoList({
             <TodoForm save={addTodo} />
           </li>
         </ul>
+        <div style={{ background: 'lavender', padding: 20, float: 'right' }}>
+          <pre>todos: {JSON.stringify(allTodos, null, 2)}</pre>
+          <pre>history: {JSON.stringify(history, null, 2)}</pre>
+          <pre>state: {JSON.stringify(state, null, 2)}</pre>
+        </div>
       </div>
     </div>
   );
