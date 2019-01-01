@@ -7,9 +7,9 @@ import {
   Monday,
   Tuesday,
   ALL_DAYS_SELECTED,
-  getTodoFilters,
 } from 'shared';
 import TodoList from 'app/TodoList';
+import AppProviders from 'app/Providers';
 import { messages as todoFormMessages } from 'app/TodoForm';
 import { messages as dayPickerMessage } from 'app/DayPicker';
 import {
@@ -25,6 +25,10 @@ const createUniqueId = makeUniqueIdGenerator('todo');
 
 const TEST_MONDAY = moment('2018-12-24');
 
+function renderTodoList(children) {
+  return render(<AppProviders>{children}</AppProviders>);
+}
+
 export const createDefaultTodo = (text, overrides) => ({
   id: createUniqueId(),
   days: ALL_DAYS_SELECTED,
@@ -34,7 +38,7 @@ export const createDefaultTodo = (text, overrides) => ({
 });
 
 test('no todos', () => {
-  const { queryByLabelText } = render(<TodoList />);
+  const { queryByLabelText } = renderTodoList(<TodoList />);
   expect(
     queryByLabelText(
       new RegExp(`^(${todoAriaLabelPart1})|(${todoAriaLabelPart2})$`, 'g')
@@ -43,7 +47,7 @@ test('no todos', () => {
 });
 
 test('create a todo with defaults', () => {
-  const { getByText, getByPlaceholderText, getByLabelText } = render(
+  const { getByText, getByPlaceholderText, getByLabelText } = renderTodoList(
     <TodoList />
   );
   // Given an empty todo list
@@ -64,7 +68,7 @@ test('create a todo with defaults', () => {
 });
 
 test('create a todo with with custom days', () => {
-  const { getByText, getByPlaceholderText, getByLabelText } = render(
+  const { getByText, getByPlaceholderText, getByLabelText } = renderTodoList(
     <TodoList defaultDay={TEST_MONDAY} />
   );
   // Given an empty todo list
@@ -94,7 +98,7 @@ test('list todos', () => {
   const todo2 = createDefaultTodo('Do that');
   const defaultTodos = [todo1, todo2];
   // Given a todo list with existing todos
-  const { getByLabelText, getByText } = render(
+  const { getByLabelText, getByText } = renderTodoList(
     <TodoList defaultTodos={defaultTodos} defaultDay={TEST_MONDAY} />
   );
   // Then I see each todo listed with a checkbox
@@ -113,7 +117,7 @@ test('filter todays todos', () => {
 
   // Given it is Monday
   // Then when I view my todo list filtered by the day be default
-  const { queryByLabelText, queryByText } = render(
+  const { queryByLabelText, queryByText } = renderTodoList(
     <TodoList defaultTodos={defaultTodos} defaultDay={TEST_MONDAY} />
   );
 
@@ -136,7 +140,7 @@ test('remove a todo', () => {
   const defaultTodos = [todo1, todo2];
 
   // Given a list with 2 todos
-  const { queryByLabelText, queryByText } = render(
+  const { queryByLabelText, queryByText } = renderTodoList(
     <TodoList defaultTodos={defaultTodos} />
   );
 
@@ -161,7 +165,7 @@ test('edit a todo', () => {
   const todo2 = createDefaultTodo('apple');
   const editButtonLabel = generateAriaLabelForEditTodoButton(todo);
   // Given a todo list with an existing todo
-  const { container, queryByLabelText, getByText } = render(
+  const { container, queryByLabelText, getByText } = renderTodoList(
     <TodoList defaultTodos={[todo, todo2]} defaultDay={TEST_MONDAY} />
   );
   expect(
