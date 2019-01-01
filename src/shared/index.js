@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import localForage from 'localforage';
 import isEqual from 'lodash/isEqual';
+import { Store } from 'app/Providers';
 import moment from 'moment';
 
 // Store
@@ -58,6 +59,10 @@ function formatDate(date) {
   const month = date.getMonth();
   const day = date.getDate();
   return `${month}-${day}-${year}`;
+}
+
+export function useGlobalState() {
+  return useContext(Store);
 }
 
 export function useTodoHistory(defaultHistory = {}) {

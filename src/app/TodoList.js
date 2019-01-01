@@ -3,15 +3,14 @@ import TodoForm from 'app/TodoForm';
 import TodoListItem from 'app/TodoListItem';
 import { useTodoList, useTodoHistory } from 'shared';
 import DayBrowser from 'app/DayBrowser';
-import { useDayBrowser } from 'shared';
+import { useGlobalState } from 'shared';
 
 export default function TodoList({
   defaultTodos = [],
   defaultHistory,
   defaultDay,
 }) {
-  const dayBrowserProps = useDayBrowser(defaultDay);
-  const { day: currentSelectedDay } = dayBrowserProps;
+  const { state } = useGlobalState();
   const {
     todos,
     filters,
@@ -20,13 +19,14 @@ export default function TodoList({
     addTodo,
     removeTodo,
     updateTodo,
-  } = useTodoList(defaultTodos, currentSelectedDay);
+  } = useTodoList(defaultTodos, state.currentDay);
   const { history, toggleTodoForDay } = useTodoHistory(defaultHistory);
 
   return (
     <div>
-      <DayBrowser {...dayBrowserProps} />
+      <DayBrowser />
       <pre>{JSON.stringify(history, null, 2)}</pre>
+      <pre>{JSON.stringify(state, null, 2)}</pre>
       <div>
         Filters
         {filters.map(name => (

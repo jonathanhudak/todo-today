@@ -1,13 +1,14 @@
-import { useState } from 'react';
 import moment from 'moment';
+import { useGlobalState } from 'shared';
 
 export function useDayBrowser(defaultDay = moment()) {
-  const [day, setDay] = useState(defaultDay);
-  const goToNextDay = () => setDay(day.add(1, 'day'));
-  const goToPreviousDay = () => setDay(day.subtract(1, 'day'));
+  const { state, setState } = useGlobalState();
+  const { currentDay } = state;
+  const setDay = day => setState({ currentDay: day });
+  const goToNextDay = () => setDay(currentDay.add(1, 'day'));
+  const goToPreviousDay = () => setDay(currentDay.subtract(1, 'day'));
   const goToToday = () => setDay(moment());
   return {
-    day,
     goToNextDay,
     goToPreviousDay,
     goToToday,
