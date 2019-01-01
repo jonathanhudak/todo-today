@@ -37,6 +37,5 @@ export function useTodoHistory(defaultHistory = {}) {
     history,
     isCompletedForDay,
     toggleTodoForDay,
-    getDayHistory,
   };
 }

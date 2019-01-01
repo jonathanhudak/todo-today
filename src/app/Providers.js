@@ -1,7 +1,6 @@
 import React, { createContext, useReducer } from 'react';
 import moment from 'moment';
 import PropTypes from 'prop-types';
-import { momentObj } from 'react-moment-proptypes';
 
 export const Store = createContext();
 const reducer = (oldState, newState) => ({ ...oldState, ...newState });
@@ -12,11 +11,10 @@ function StoreProvider({ children }) {
   return <Store.Provider value={store}>{children}</Store.Provider>;
 }
 
-export default function AppProviders({ children, ...restProps }) {
+export default function AppProviders({ children }) {
   return <StoreProvider>{children}</StoreProvider>;
 }
 
 AppProviders.propTypes = {
-  day: momentObj,
   children: PropTypes.node.isRequired,
 };
