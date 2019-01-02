@@ -110,7 +110,6 @@ export const getTodoFilters = ({ day } = {}) => {
 };
 
 export function useTodoList(defaultTodos = [], day = moment()) {
-  const generateId = makeUniqueIdGenerator('todo', defaultTodos.length - 1);
   const [todos, setTodos] = useState(defaultTodos);
   const getFilters = () => getTodoFilters({ day: day.get('day') });
   const { currentFilters, setFilters, ...filterProps } = useFilters(
@@ -128,6 +127,7 @@ export function useTodoList(defaultTodos = [], day = moment()) {
   );
 
   const addTodo = todo => {
+    const generateId = makeUniqueIdGenerator('todo', todos.length);
     const newTodos = [...todos, { id: generateId(), ...todo }];
     setTodos(newTodos);
   };

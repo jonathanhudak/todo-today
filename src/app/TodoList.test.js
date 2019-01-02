@@ -82,7 +82,8 @@ test('create a todo with defaults', () => {
 
 test('create a todo with with custom days', () => {
   const { getByText, getByPlaceholderText, getByLabelText } = renderTodoList(
-    <TodoList defaultDay={TEST_MONDAY} />
+    <TodoList />,
+    { currentDay: TEST_MONDAY }
   );
   // Given an empty todo list
   const saveButton = getByText(todoFormMessages.saveLabel);
@@ -167,9 +168,11 @@ test('edit a todo', () => {
   const todo = createDefaultTodo(oldValue);
   const todo2 = createDefaultTodo('apple');
   const editButtonLabel = generateAriaLabelForEditTodoButton(todo);
+
   // Given a todo list with an existing todo
   const renderResult = renderTodoList(
-    <TodoList defaultTodos={[todo, todo2]} />
+    <TodoList defaultTodos={[todo, todo2]} />,
+    { currentDay: TEST_MONDAY }
   );
   const { container, queryByLabelText, getByText } = renderResult;
 
