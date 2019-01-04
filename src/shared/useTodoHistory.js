@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import isEqual from 'lodash/isEqual';
+import isEmpty from 'lodash/isEmpty';
 import localForage from 'localforage';
 import { DB_TODOS_HISTORY_KEY, formatDate } from 'shared';
 
@@ -8,7 +9,7 @@ export function useTodoHistory(defaultHistory = {}) {
   const [history, setHistory] = useState(defaultHistory);
 
   useEffect(() => {
-    if (!isEqual(lastHistory, history)) {
+    if (!isEqual(lastHistory, history) && !isEmpty(history)) {
       localForage.setItem(DB_TODOS_HISTORY_KEY, history);
     }
   });

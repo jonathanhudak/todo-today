@@ -43,7 +43,6 @@ export function makeUniqueIdGenerator(id = '', initialIndex = 0) {
 
 export const getTodoHistory = async () => {
   try {
-    localForage.setItem(DB_TODOS_HISTORY_KEY, {});
     const store = await localForage.getItem(DB_TODOS_HISTORY_KEY);
     if (!store) {
       await localForage.setItem(DB_TODOS_HISTORY_KEY, {});
