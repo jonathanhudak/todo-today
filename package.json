@@ -25,7 +25,7 @@
     "precommit": "lint-staged"
   },
   "lint-staged": {
-    "*/*.{js,jsx,json}": [
+    "*/*.{js,jsx}": [
       "npm run test:staged",
       "eslint --fix",
       "git add"
