@@ -12,7 +12,7 @@ self.__precacheManifest = [
     "url": "/todo-today/static/js/runtime~main.5bebd1ad.js"
   },
   {
-    "revision": "c9a79de044265f81696ddd2c94039eaa",
+    "revision": "f2d227c19adbe7a325b51aee4b817ac4",
     "url": "/todo-today/index.html"
   }
 ];
