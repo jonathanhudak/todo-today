@@ -1,11 +1,11 @@
 {
-  "main.js": "/todo-today/static/js/main.8de94f4e.chunk.js",
-  "main.js.map": "/todo-today/static/js/main.8de94f4e.chunk.js.map",
+  "main.js": "/todo-today/static/js/main.c72a9a4b.chunk.js",
+  "main.js.map": "/todo-today/static/js/main.c72a9a4b.chunk.js.map",
   "static/js/1.52c9ecdc.chunk.js": "/todo-today/static/js/1.52c9ecdc.chunk.js",
   "static/js/1.52c9ecdc.chunk.js.map": "/todo-today/static/js/1.52c9ecdc.chunk.js.map",
   "runtime~main.js": "/todo-today/static/js/runtime~main.5bebd1ad.js",
   "runtime~main.js.map": "/todo-today/static/js/runtime~main.5bebd1ad.js.map",
   "index.html": "/todo-today/index.html",
-  "precache-manifest.eda81e11718cdca803313caa0a49a7b4.js": "/todo-today/precache-manifest.eda81e11718cdca803313caa0a49a7b4.js",
+  "precache-manifest.3a29620e174b0b0674e7bce903272941.js": "/todo-today/precache-manifest.3a29620e174b0b0674e7bce903272941.js",
   "service-worker.js": "/todo-today/service-worker.js"
 }
