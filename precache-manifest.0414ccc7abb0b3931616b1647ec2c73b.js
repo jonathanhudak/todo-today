@@ -1,7 +1,7 @@
 self.__precacheManifest = [
   {
-    "revision": "c72a9a4bda13bf7201a8",
-    "url": "/todo-today/static/js/main.c72a9a4b.chunk.js"
+    "revision": "dcd5e9ef03145e1f0330",
+    "url": "/todo-today/static/js/main.dcd5e9ef.chunk.js"
   },
   {
     "revision": "52c9ecdc8f0c020d5d6d",
@@ -12,7 +12,7 @@ self.__precacheManifest = [
     "url": "/todo-today/static/js/runtime~main.5bebd1ad.js"
   },
   {
-    "revision": "17b60ea62d1ef64e47c3b42ac66b03df",
+    "revision": "83c21457fd85d03fee2a3324a55d900b",
     "url": "/todo-today/index.html"
   }
 ];
